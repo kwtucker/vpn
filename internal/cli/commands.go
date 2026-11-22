@@ -2,8 +2,8 @@ package cli
 
 import "github.com/spf13/cobra"
 
-// NewRootCmd builds the complete command tree. It is also the integration
-// point used by the wb aggregator.
+// NewRootCmd builds the complete command tree. The public cmd package wraps it
+// for the standalone binary and for embedding in other Cobra CLIs.
 func NewRootCmd(app *App) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "vpn",

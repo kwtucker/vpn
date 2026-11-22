@@ -40,12 +40,6 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    rules:
-      # Tests deliberately create world-readable public keys and 0755 fake
-      # ssh-keygen scripts to exercise real permission behavior.
-      - path: _test\.go
-        linters:
-          - gosec
 
 formatters:
   enable:
@@ -54,4 +48,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/kwtucker/temp-ssh-key
+        - github.com/kwtucker/vpn

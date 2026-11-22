@@ -74,19 +74,6 @@ Two caveats:
 - Disconnect-first can drop your session if you are connected remotely through
   the VPN being disconnected. First tests should be run locally.
 
-## Embedding in `wb`
-
-The public `cmd` package returns a plain `*cobra.Command` and exposes no
-internal types, so the aggregator can register it directly:
-
-```go
-import vpncmd "github.com/kwtucker/vpn/cmd"
-
-RootCmd.AddCommand(vpncmd.NewRootCmd(""))
-```
-
-That provides `wb vpn mull`, `wb vpn tail`, and `wb vpn status`.
-
 ## Development
 
 ```sh

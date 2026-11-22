@@ -24,38 +24,37 @@ details.
 
 ## Threat model
 
-`temp-ssh-key` reduces the time a private key exists on a machine you do not
-control. It does not make that machine trustworthy.
+`vpn` coordinates two existing VPN clients so that only one is active at a
+time. It does not manage credentials, keys, or daemon configuration, and it
+never uses a shell or requests elevation.
 
 In scope:
 
-- Accidental disclosure of private key material through stdout, stderr, or
-  process arguments.
-- Unsafe shell quoting in the `eval`-able exports.
-- Terminal-control or multi-line injection through the public key comment or
-  Git identity.
-- Credential or repository redirection through inherited environment variables
-  in an isolated session.
-- Cleanup deleting or inspecting paths it does not own, including symlinks,
-  unexpected files, and directories outside the managed layout.
-- Weak file or directory permissions created or accepted by the tool.
-- Mishandling of `ssh-keygen` failures or partial key directories.
+- Leaving both VPNs active when a switch fails, including incorrect parsing of
+  `mullvad status --json` or `tailscale status --json`.
+- Connecting the target before the other client has actually finished going
+  down, or returning before the final state has been verified.
+- Command-line arguments being misinterpreted or unexpectedly forwarded to
+  `mullvad` or `tailscale`, including arguments that change VPN settings.
+- Unsafe handling of captured child-process output, which can contain relay,
+  location, or daemon diagnostic details.
+- Cleanup or rollback affecting processes and state the tool does not own.
 
 Out of scope:
 
 - A compromised operating system, firmware, boot chain, or hypervisor.
-- Keyloggers, screen capture, malicious terminals, or malicious `ssh-keygen`
-  or `ssh` binaries on `PATH`.
-- Compromise of the trusted device, the remote Git host, or the SSH server.
-- Git, SSH, or shell vulnerabilities outside this project's code.
-- Anonymity, attribution resistance, or protection against network observers.
-- Failing to revoke remote authorization. Revocation is always a separate,
-  manual step on a trusted device; deleting local files is not revocation.
-- A key that is authorized longer than intended because the user skipped the
-  revoke step.
+- Malicious `mullvad` or `tailscale` binaries earlier on `PATH`, or a
+  compromised VPN daemon.
+- Vulnerabilities in Mullvad, Tailscale, their daemons, or their configuration.
+- Losing network access or dropping a remote session as a consequence of
+  disconnect-first switching. Use a local session for the first switch.
+- A third party changing VPN state outside this tool. `vpn status` detects the
+  conflict but there is no background watchdog.
+- Partial switches if the process is killed or the machine loses power midway.
+  Run `vpn status` afterwards and repair with `vpn off` if needed.
 
 ## Security model
 
-The README documents the intended operating model and remaining risks. Treat
-the isolated shell as a convenience against shell history, not as a security
-boundary.
+The README documents the intended operating model and remaining risks. This
+tool is a convenience wrapper, not a security boundary between the two VPN
+clients.
