@@ -13,7 +13,7 @@ not manage accounts, keys, or VPN settings.
 With mise:
 
 ```sh
-mise use -g github:kwtucker/vpn@0.1.0
+mise use -g github:kwtucker/vpn@latest
 ```
 
 With Go:
