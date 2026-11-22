@@ -162,19 +162,32 @@ func TestConnectTailscaleAbortsWhenMullvadDisconnectFails(t *testing.T) {
 	}
 }
 
+func TestConnectTailscaleUsesNoFlagsByDefault(t *testing.T) {
+	f := newFakeRunner()
+	app, _, _ := newTestApp(f)
+
+	if err := app.ConnectTailscale(context.Background(), nil); err != nil {
+		t.Fatalf("ConnectTailscale: %v", err)
+	}
+	args := f.argsFor("tailscale", "up")
+	if len(args) != 1 || args[0] != "up" {
+		t.Fatalf("expected plain 'tailscale up', got %v", args)
+	}
+}
+
 func TestConnectTailscaleForwardsExtraArgs(t *testing.T) {
 	f := newFakeRunner()
 	app, _, _ := newTestApp(f)
 
-	if err := app.ConnectTailscale(context.Background(), []string{"--exit-node=auto:any"}); err != nil {
+	if err := app.ConnectTailscale(context.Background(), []string{"--exit-node=auto:any", "--timeout=5s"}); err != nil {
 		t.Fatalf("ConnectTailscale: %v", err)
 	}
 	args := f.argsFor("tailscale", "up")
 	if !contains(args, "--exit-node=auto:any") {
 		t.Fatalf("extra flag not forwarded: %v", args)
 	}
-	if !contains(args, "--timeout=1s") {
-		t.Fatalf("default timeout missing: %v", args)
+	if !contains(args, "--timeout=5s") {
+		t.Fatalf("user timeout not forwarded: %v", args)
 	}
 }
 

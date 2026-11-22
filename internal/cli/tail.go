@@ -12,11 +12,10 @@ func (a *App) ConnectTailscale(ctx context.Context, extra []string) error {
 		return err
 	}
 
-	args := []string{"up"}
-	if !hasFlag(extra, "--timeout") {
-		args = append(args, "--timeout="+a.ConnectTimeout.String())
-	}
-	args = append(args, extra...)
+	// Call plain `tailscale up` unless the user supplies flags. Tailscale treats
+	// any flag as a settings change and then requires every non-default pref to
+	// be repeated; no flags means "bring the interface up with current prefs".
+	args := append([]string{"up"}, extra...)
 	if err := a.run(ctx, "tailscale", args...); err != nil {
 		return fmt.Errorf("tailscale up: %w", err)
 	}

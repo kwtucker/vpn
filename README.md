@@ -43,10 +43,17 @@ vpn tail --exit-node=auto:any
 vpn mull --wait
 ```
 
-The wrapper adds `--wait` to `mullvad connect` and a bounded `--timeout` to
-`tailscale up` unless you supply your own. It then verifies both the target
-state and that the other VPN is still down; a failed check rolls the target
-back and returns an error.
+The wrapper adds `--wait` to `mullvad connect`. It calls plain `tailscale up`
+so your existing Tailscale preferences are preserved; flags you supply are
+forwarded verbatim. Command execution and the state checks are bounded by the
+wrapper's own timeouts. It then verifies both the target state and that the
+other VPN is still down; a failed check rolls the target back and returns an
+error.
+
+Note: Tailscale treats any flag passed to `up` as a settings change and then
+requires every non-default preference to be repeated. If you pass flags, check
+`tailscale get` first or add `--reset` deliberately; plain `vpn tail` avoids
+that entirely.
 
 ## Why mutual exclusion?
 
