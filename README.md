@@ -43,6 +43,9 @@ vpn tail --exit-node=auto:any
 vpn mull --wait
 ```
 
+Mullvad's progress chatter is captured so `vpn mull` prints one summary line;
+if the command fails, the captured output is included in the error.
+
 The wrapper adds `--wait` to `mullvad connect`. It calls plain `tailscale up`
 so your existing Tailscale preferences are preserved; flags you supply are
 forwarded verbatim. Command execution and the state checks are bounded by the

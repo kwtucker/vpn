@@ -4,8 +4,10 @@ package cli
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/kwtucker/vpn/internal/execx"
@@ -58,12 +60,34 @@ func (a *App) run(ctx context.Context, name string, args ...string) error {
 	return a.Runner.Run(cmdCtx, a.In, name, args, a.Out, a.Err)
 }
 
+// output captures a status command's JSON. Child stderr is kept for errors but
+// never printed on success, so status checks stay silent.
 func (a *App) output(ctx context.Context, name string, args ...string) (string, error) {
 	cmdCtx, cancel := context.WithTimeout(ctx, a.CommandTimeout)
 	defer cancel()
-	var buf bytes.Buffer
-	if err := a.Runner.Run(cmdCtx, nil, name, args, &buf, a.Err); err != nil {
-		return "", err
+	var stdout, stderr bytes.Buffer
+	if err := a.Runner.Run(cmdCtx, nil, name, args, &stdout, &stderr); err != nil {
+		return "", commandError(err, &stdout, &stderr)
 	}
-	return buf.String(), nil
+	return stdout.String(), nil
+}
+
+// runQuiet runs a command without streaming its progress. On failure the
+// captured output is included in the error so nothing is lost.
+func (a *App) runQuiet(ctx context.Context, name string, args ...string) error {
+	cmdCtx, cancel := context.WithTimeout(ctx, a.CommandTimeout)
+	defer cancel()
+	var stdout, stderr bytes.Buffer
+	if err := a.Runner.Run(cmdCtx, a.In, name, args, &stdout, &stderr); err != nil {
+		return commandError(err, &stdout, &stderr)
+	}
+	return nil
+}
+
+func commandError(err error, stdout, stderr *bytes.Buffer) error {
+	detail := strings.TrimSpace(stdout.String() + "\n" + stderr.String())
+	if detail == "" {
+		return err
+	}
+	return fmt.Errorf("%w: %s", err, detail)
 }

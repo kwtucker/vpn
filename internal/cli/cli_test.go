@@ -20,6 +20,7 @@ type fakeRunner struct {
 	calls          []call
 	mullvadState   string
 	tailscaleState string
+	noise          string
 	fail           map[string]error
 }
 
@@ -45,6 +46,9 @@ func (f *fakeRunner) Run(_ context.Context, _ io.Reader, name string, args []str
 		fmt.Fprintf(stdout, "{\"BackendState\":%q}\n", f.tailscaleState)
 	case name == "mullvad" && len(args) > 0 && args[0] == "connect":
 		f.mullvadState = "connected"
+		if f.noise != "" {
+			fmt.Fprint(stdout, f.noise)
+		}
 	case name == "mullvad" && len(args) > 0 && args[0] == "disconnect":
 		f.mullvadState = "disconnected"
 	case name == "tailscale" && len(args) > 0 && args[0] == "up":
@@ -111,6 +115,22 @@ func TestConnectMullvadBringsTailscaleDownFirst(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "Mullvad connected") {
 		t.Fatalf("unexpected output: %q", out.String())
+	}
+}
+
+func TestMullvadProgressIsNotPrinted(t *testing.T) {
+	f := newFakeRunner()
+	f.noise = "Connecting\n    Relay: test\nConnected\n    Relay: test\n"
+	app, out, _ := newTestApp(f)
+
+	if err := app.ConnectMullvad(context.Background(), nil); err != nil {
+		t.Fatalf("ConnectMullvad: %v", err)
+	}
+	if strings.Contains(out.String(), "Relay:") || strings.Contains(out.String(), "Connecting") {
+		t.Fatalf("mullvad progress leaked to output: %q", out.String())
+	}
+	if !strings.Contains(out.String(), "Mullvad connected") {
+		t.Fatalf("summary line missing: %q", out.String())
 	}
 }
 

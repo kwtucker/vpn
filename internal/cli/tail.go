@@ -38,7 +38,7 @@ func (a *App) ensureMullvadDisconnected(ctx context.Context) error {
 	if !connected {
 		return nil
 	}
-	if err := a.run(ctx, "mullvad", "disconnect", "--wait"); err != nil {
+	if err := a.runQuiet(ctx, "mullvad", "disconnect", "--wait"); err != nil {
 		return fmt.Errorf("mullvad disconnect: %w", err)
 	}
 	if err := a.waitForMullvad(ctx, false, a.DownTimeout); err != nil {

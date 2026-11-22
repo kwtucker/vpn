@@ -17,11 +17,11 @@ func (a *App) ConnectMullvad(ctx context.Context, extra []string) error {
 		args = append(args, "--wait")
 	}
 	args = append(args, extra...)
-	if err := a.run(ctx, "mullvad", args...); err != nil {
+	if err := a.runQuiet(ctx, "mullvad", args...); err != nil {
 		return fmt.Errorf("mullvad connect: %w", err)
 	}
 	if err := a.waitForMullvad(ctx, true, a.ConnectTimeout); err != nil {
-		_ = a.run(ctx, "mullvad", "disconnect", "--wait")
+		_ = a.runQuiet(ctx, "mullvad", "disconnect", "--wait")
 		return fmt.Errorf("mullvad did not connect: %w", err)
 	}
 	if err := a.ensureTailscaleDown(ctx); err != nil {
