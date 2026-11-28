@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -87,15 +88,6 @@ func newTestApp(f *fakeRunner) (*App, *bytes.Buffer, *bytes.Buffer) {
 	app.ConnectTimeout = time.Second
 	app.DownTimeout = time.Second
 	return app, out, errOut
-}
-
-func contains(args []string, want string) bool {
-	for _, arg := range args {
-		if arg == want {
-			return true
-		}
-	}
-	return false
 }
 
 func TestConnectMullvadBringsTailscaleDownFirst(t *testing.T) {
@@ -203,10 +195,10 @@ func TestConnectTailscaleForwardsExtraArgs(t *testing.T) {
 		t.Fatalf("ConnectTailscale: %v", err)
 	}
 	args := f.argsFor("tailscale", "up")
-	if !contains(args, "--exit-node=auto:any") {
+	if !slices.Contains(args, "--exit-node=auto:any") {
 		t.Fatalf("extra flag not forwarded: %v", args)
 	}
-	if !contains(args, "--timeout=5s") {
+	if !slices.Contains(args, "--timeout=5s") {
 		t.Fatalf("user timeout not forwarded: %v", args)
 	}
 }
